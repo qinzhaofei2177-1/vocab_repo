@@ -20,6 +20,13 @@
         {% else %}
         <li>gender: Female</li>
         {% endif %}
+        <br/>
+        <form action="{% url 'exam' %}" method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Submit"/>
+        </form>
+        <br/>
         <li><a href="{% url 'logout' %}">Logout</a></li>
     </ul>
 {% endblock %}

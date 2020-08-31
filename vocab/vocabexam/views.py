@@ -4,30 +4,8 @@ from django.shortcuts import render
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.db.models import Max
 from .models import Dictionary, UserForm, UserProfileForm, UserProfile
-import random
-
-# Utility functions
-def random_words(count=1):
-    max_id = Dictionary.objects.all().aggregate(max_id=Max("id"))['max_id']
-    word = None
-    rand_word_list = []
-    while len(rand_word_list) < count:
-        while word==None:
-            pk = random.randint(1, max_id)
-            word = Dictionary.objects.get(pk=pk)
-        else:
-            rand_word_list.append(word)
-            word = None
-
-    return rand_word_list
-
-def generate_options(word, totalOpt=4):
-    pos = random.randint(0, totalOpt-1)
-    options = random_words(totalOpt-1)
-    options.insert(pos, word)
-    return options
+from .forms import TestForm
 
 # Create your views here.
 def index(request):
@@ -67,8 +45,18 @@ def register(request):
 def exam(request):
     if not request.user.is_authenticated:
         return render(request, "vocabexam/login.html", {"message": None})
+    if request.method == 'POST':
+        f = TestForm(request.POST)
+        if f.is_valid():
+            # test if the answer is correct
+            form = TestForm()
+        else:
+            form = TestForm()
+    else:
+        form = TestForm()
     context = {
         "user": request.user,
+        "form": form,
     }
     return render(request, "vocabexam/exam.html", context)
 
