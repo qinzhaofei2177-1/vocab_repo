@@ -23,6 +23,12 @@ def random_words(count=1):
 
     return rand_word_list
 
+def generate_options(word, totalOpt=4):
+    pos = random.randint(0, totalOpt-1)
+    options = random_words(totalOpt-1)
+    options.insert(pos, word)
+    return options
+
 # Create your views here.
 def index(request):
     return render(request, "vocabexam/index.html")
@@ -99,6 +105,7 @@ def search(request, pattern="", limit=20):
         else:
             return HttpResponse(words)
 
-def rand(request, count=1):
-    words = random_words(count)
-    return HttpResponse(words)
+def rand(request, pattern, count=1):
+    target = Dictionary.objects.filter(BaseWord__icontains=pattern)[:1]
+    options = generate_options(target[0], count)
+    return HttpResponse(options)

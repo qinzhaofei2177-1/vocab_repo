@@ -13,5 +13,5 @@ urlpatterns = [
     path("search", views.search, name='search'),
     path("search/<str:pattern>", views.search, name='search'),
     path("search/<str:pattern>/<int:limit>", views.search, name='search'),
-    path("rand/<int:count>", views.rand, name='rand'),
+    path("rand/<str:pattern>/<int:count>", views.rand, name='rand'),
 ]
