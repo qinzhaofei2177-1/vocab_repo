@@ -1,12 +1,27 @@
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+from django.shortcuts import render
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
-from django.urls import reverse
-from django.contrib import messages
-from django.contrib.auth.forms import UserCreationForm
-
+from django.db.models import Max
 from .models import Dictionary, UserForm, UserProfileForm, UserProfile
+import random
+
+# Utility functions
+def random_words(count=1):
+    max_id = Dictionary.objects.all().aggregate(max_id=Max("id"))['max_id']
+    word = None
+    rand_word_list = []
+    while len(rand_word_list) < count:
+        while word==None:
+            pk = random.randint(1, max_id)
+            word = Dictionary.objects.get(pk=pk)
+        else:
+            rand_word_list.append(word)
+            word = None
+
+    return rand_word_list
 
 # Create your views here.
 def index(request):
@@ -83,3 +98,7 @@ def search(request, pattern="", limit=20):
             return HttpResponse(f"Sorry, no words like \"...{pattern}...\" found.")
         else:
             return HttpResponse(words)
+
+def rand(request, count=1):
+    words = random_words(count)
+    return HttpResponse(words)
