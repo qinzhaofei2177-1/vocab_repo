@@ -1,40 +1,33 @@
 from django import forms
-from django.db.models import Max
-from .models import Dictionary
-import random
-
-# Utility functions
-def random_words(count=1):
-    max_id = Dictionary.objects.all().aggregate(max_id=Max("id"))['max_id']
-    word = None
-    rand_word_list = []
-    while len(rand_word_list) < count:
-        while word==None:
-            pk = random.randint(1, max_id)
-            word = Dictionary.objects.get(pk=pk)
-        else:
-            rand_word_list.append(word)
-            word = None
-
-    return rand_word_list
-
-def generate_options(word, totalOpt=4):
-    pos = random.randint(0, totalOpt-1)
-    options = random_words(totalOpt-1)
-    options.insert(pos, word)
-    return options
 
 # form classes
 class TestForm(forms.Form):
     ##CHOICES = [('1', 'First'), ('2', 'Second')]
-    option = forms.ChoiceField(label='word', widget=forms.RadioSelect)
+    word = forms.CharField(label='word', widget=forms.HiddenInput, initial="")
+    options = forms.CharField(label='options', widget=forms.HiddenInput, initial="")
+    choice = forms.ChoiceField(label='choice', widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
-        super(forms.Form, self).__init__(*args, **kwargs)
-        w = random_words(1)[0]
-        self.fields['option'].label = w.BaseWord
-        ch = []
-        options = generate_options(w, 4)
-        for o in options:
-            ch.append((o.id, o.Defn))
-        self.fields['option'].choices = ch
+        super(forms.Form, self).__init__()
+        
+        opt = []
+        for key, value in kwargs.items():
+            if key == 'wordItem':
+                self.fields['word'].initial = value.BaseWord
+                self.fields['choice'].label = value.BaseWord
+            if key == 'optionItems':
+                for val in value:
+                    opt.append((val.id, val.Defn))
+                    self.fields['options'].initial += "||" + str(val.id) + "#" + str(val.Defn)
+                    self.fields['options'].initial = self.fields['options'].initial.strip('||')
+            if key == 'word':
+                self.fields['word'].initial = value
+                self.fields['choice'].label = value
+            if key == 'options':
+                self.fields['options'].initial = value
+                d = dict(x.split("#") for x in value.split("||"))
+                for k, v in d.items():
+                    opt.append((k, v))
+        
+        self.fields['choice'].choices = opt
+        

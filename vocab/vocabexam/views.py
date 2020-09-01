@@ -6,6 +6,29 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from .models import Dictionary, UserForm, UserProfileForm, UserProfile
 from .forms import TestForm
+from django.db.models import Max
+import random
+
+# Utility functions
+def random_words(count=1):
+    max_id = Dictionary.objects.all().aggregate(max_id=Max("id"))['max_id']
+    word = None
+    rand_word_list = []
+    while len(rand_word_list) < count:
+        while word==None:
+            pk = random.randint(1, max_id)
+            word = Dictionary.objects.get(pk=pk)
+        else:
+            rand_word_list.append(word)
+            word = None
+
+    return rand_word_list
+
+def generate_options(word, totalOpt=4, asDictionary=False):
+    pos = random.randint(0, totalOpt-1)
+    options = random_words(totalOpt-1)
+    options.insert(pos, word)
+    return options
 
 # Create your views here.
 def index(request):
@@ -49,11 +72,13 @@ def exam(request):
         f = TestForm(request.POST)
         if f.is_valid():
             # test if the answer is correct
-            form = TestForm()
+            form = TestForm(word=request.POST["word"],options=request.POST["options"])
         else:
-            form = TestForm()
+            form = TestForm(word=request.POST["word"],options=request.POST["options"])
     else:
-        form = TestForm()
+        w = random_words(1)[0]
+        o = generate_options(w, 4)
+        form = TestForm(wordItem=w, optionItems=o)
     context = {
         "user": request.user,
         "form": form,
